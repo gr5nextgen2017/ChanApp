@@ -1,5 +1,6 @@
 package com.nextgen.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,20 +48,35 @@ public class VaccinationController {
 	
 	@RequestMapping(value="/getVaccinationHistory", method=RequestMethod.POST)
 	@ResponseBody
-	public HashMap<String, HashMap<String, HashMap<String, String>>> getVaccinationHistory(@RequestBody ParentDetails parent) {
-		HashMap<String, HashMap<String,HashMap<String,String>>> profile = new HashMap<String, HashMap<String,HashMap<String,String>>>();
+	public HashMap<String, ArrayList<HashMap<String, ArrayList<HashMap<String, String>>>>> getVaccinationHistory(@RequestBody ParentDetails parent) {
+		HashMap<String, ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>>> profile = new HashMap<String, ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>>>();
 		List <ChildDetails> cList = childService.getChildDetails(parent.getParent_id());
 			if(!cList.isEmpty()) {
-				int count=0;
-				
+				ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>> vaccinearray = new ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>>();
 				for (ChildDetails row : cList) {
-					HashMap<String,HashMap<String,String>> map1= new HashMap<String,HashMap<String,String>>();
-					count++;
-					int vaccineCount = 0;
+					HashMap<String,ArrayList<HashMap<String,String>>> map1= new HashMap<String,ArrayList<HashMap<String,String>>>();
+					ArrayList<HashMap<String,String>> carray = new ArrayList<HashMap<String,String>>();
+					HashMap<String, String> cmap = new HashMap<String,String>(); 
+					cmap.put("name",row.getName());
+					carray.add(cmap);
+					map1.put("name",carray);
+					
+					cmap = new HashMap<String,String>(); 
+					cmap.put("dob",row.getDob());
+					carray = new ArrayList<HashMap<String,String>>();
+					carray.add(cmap);
+					map1.put("dob",carray);
+					
+					cmap = new HashMap<String,String>();
+					cmap.put("gender",row.getGender());
+					carray = new ArrayList<HashMap<String,String>>();
+					carray.add(cmap);
+					map1.put("gender",carray);
+				
 					List <VaccinationHistory> vList = vaccineService.getVaccineDetails(row.getChild_id());
+					ArrayList<HashMap<String,String>> varray = new ArrayList<HashMap<String,String>>();
 					if(!vList.isEmpty()) {
 						for (VaccinationHistory vrow : vList) {
-							vaccineCount++;
 							HashMap<String, String> vmap = new HashMap<String,String>(); 
 							vmap.put("name",vrow.getName());
 							vmap.put("vaccination_date",vrow.getVaccination_date());
@@ -68,23 +84,26 @@ public class VaccinationController {
 							vmap.put("doctor_phone",vrow.getDoctor_phone());
 							vmap.put("hospital_name",vrow.getHospital_name());
 							vmap.put("sideeffects",vrow.getSideeffects());
-							
-							String newVarName = "Vaccine"+vaccineCount+"details";
-							map1.put(newVarName,vmap);							
+							varray.add(vmap);														
 						}
+						map1.put("history",varray);
 					}					
-					String newVarName = "child"+count+"details";
-					profile.put(newVarName,map1);
-				}		
+					vaccinearray.add(map1);
+				}
+				profile.put("vaccinationHistory", vaccinearray);
 			return profile;
 		}else {
-			HashMap<String, HashMap<String,HashMap<String,String>>> map1 = new HashMap<String, HashMap<String,HashMap<String,String>>>();
-			HashMap<String, HashMap<String,String>> map2 = new HashMap<String,HashMap<String,String>>();
+			HashMap<String, ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>>> map1 = new HashMap<String, ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>>>();
+			ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>> arr1 = new ArrayList<HashMap<String,ArrayList<HashMap<String,String>>>>();
+			HashMap<String,ArrayList<HashMap<String,String>>> map2 = new HashMap<String,ArrayList<HashMap<String,String>>>();
+			ArrayList<HashMap<String,String>> arr2 = new ArrayList<HashMap<String,String>>();
 			HashMap<String,String> map3 = new HashMap<String,String>();
 			map3.put("status", "701");
 		    map3.put("message", "No Vaccination is Available");
-		    map2.put("status",map3);
-			map1.put("status", map2);
+		    arr2.add(map3);
+		    map2.put("status",arr2);
+		    arr1.add(map2);
+			map1.put("status", arr1);
 		    return map1;
 		}
 	}
